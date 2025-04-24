@@ -1,0 +1,67 @@
+name: Custom Workflow Triggers
+
+on:
+  # Спрацьовує при створенні нового релізу
+  release:
+    types: [created]
+
+  # Спрацьовує при закритті пулл реквесту
+  pull_request:
+    types: [closed]
+
+  # Спрацьовує при додаванні нових файлів до репозиторію
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+
+jobs:
+  send_release_email:
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send email about new release
+        uses: dawidd6/action-send-mail@v3.8.0
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER_ADDRESS }}
+          server_port: ${{ secrets.EMAIL_SERVER_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "New Release Created: ${{ github.event.release.name }}"
+          to: ${{ secrets.RECIPIENT_EMAIL }}
+          from: ${{ secrets.EMAIL_SENDER }}
+          body: |
+            Hello,
+
+            A new release named "${{ github.event.release.name }}" has been created.
+            You can view the release details [here](${{ github.event.release.html_url }}).
+
+            Best regards,
+            Your CI/CD Pipeline
+
+  notify_pull_request_close:
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack when PR is closed
+        uses: slackapi/slack-github-action@v1.18.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: ${{ secrets.SLACK_CHANNEL }}
+          message: |
+            The pull request titled "${{ github.event.pull_request.title }}" has been closed by ${{ github.event.pull_request.user.login }}.
+            You can view the PR here: ${{ github.event.pull_request.html_url }}
+
+  check_new_files:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if new files were added
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} > new_files.txt
+          if grep -q 'src/' new_files.txt; then
+            echo "New files added in the src folder"
+          else
+            echo "No new files in the src folder"
+          fi

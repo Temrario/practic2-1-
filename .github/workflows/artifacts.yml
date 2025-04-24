@@ -1,10 +1,7 @@
-name: Car Assembly
+name: Car Assembly with Artifacts
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -25,12 +22,12 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: car-details
-          path: ./build
+          name: car-details  
+          path: ./build      
 
   test:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build  
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -38,7 +35,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v2
         with:
-          name: car-details
+          name: car-details  
 
       - name: Test car details
         run: |
