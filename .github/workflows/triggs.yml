@@ -1,15 +1,12 @@
 name: Custom Workflow Triggers
 
 on:
-  # Спрацьовує при створенні нового релізу
   release:
     types: [created]
 
-  # Спрацьовує при закритті пулл реквесту
   pull_request:
     types: [closed]
 
-  # Спрацьовує при додаванні нових файлів до репозиторію
   push:
     branches:
       - main
@@ -22,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send email about new release
-        uses: dawidd6/action-send-mail@v3.8.0
+        uses: dawidd6/action-send-mail@v3.10.0
         with:
           server_address: ${{ secrets.EMAIL_SERVER_ADDRESS }}
           server_port: ${{ secrets.EMAIL_SERVER_PORT }}
@@ -45,11 +42,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack when PR is closed
-        uses: slackapi/slack-github-action@v1.18.0
+        uses: slackapi/slack-github-action@v1.26.0
         with:
           slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel: ${{ secrets.SLACK_CHANNEL }}
-          message: |
+          channel-id: ${{ secrets.SLACK_CHANNEL }}
+          text: |
             The pull request titled "${{ github.event.pull_request.title }}" has been closed by ${{ github.event.pull_request.user.login }}.
             You can view the PR here: ${{ github.event.pull_request.html_url }}
 
@@ -57,6 +54,11 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Отримуємо історію для порівняння комітів
+
       - name: Check if new files were added
         run: |
           git diff --name-only ${{ github.event.before }} ${{ github.sha }} > new_files.txt

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Create build directory and add details
         run: |
@@ -23,31 +23,38 @@ jobs:
           echo "Wheels" >> build/car.txt
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: car-details
-          path: ./build
+          path: ./build/
 
   test:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: car-details
+          path: ./build/
 
       - name: Test car details
         run: |
           if grep -q "Car Body" ./build/car.txt; then
             echo "Car Body is present"
+          else
+            echo "Car Body is missing" && exit 1
           fi
           if grep -q "Engine" ./build/car.txt; then
             echo "Engine is present"
+          else
+            echo "Engine is missing" && exit 1
           fi
           if grep -q "Wheels" ./build/car.txt; then
             echo "Wheels are present"
+          else
+            echo "Wheels are missing" && exit 1
           fi
