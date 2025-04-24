@@ -1,0 +1,76 @@
+name: Car Assembly Line
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Create build folder and add details
+      run: |
+        mkdir -p build
+        cd build
+        echo "Body" > car_parts.txt
+        echo "Engine" >> car_parts.txt
+        echo "Wheels" >> car_parts.txt
+        echo "Doors" >> car_parts.txt
+        echo "Windows" >> car_parts.txt
+        echo "Test Complete" >> car_parts.txt
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: car-assembly
+        path: build/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Test car parts
+      run: |
+        cd build
+        if grep -q "Body" car_parts.txt; then
+          echo "Body: OK"
+        else
+          echo "Body: Missing"
+          exit 1
+        fi
+        if grep -q "Engine" car_parts.txt; then
+          echo "Engine: OK"
+        else
+          echo "Engine: Missing"
+          exit 1
+        fi
+        if grep -q "Wheels" car_parts.txt; then
+          echo "Wheels: OK"
+        else
+          echo "Wheels: Missing"
+          exit 1
+        fi
+        if grep -q "Doors" car_parts.txt; then
+          echo "Doors: OK"
+        else
+          echo "Doors: Missing"
+          exit 1
+        fi
+        if grep -q "Windows" car_parts.txt; then
+          echo "Windows: OK"
+        else
+          echo "Windows: Missing"
+          exit 1
+        fi
